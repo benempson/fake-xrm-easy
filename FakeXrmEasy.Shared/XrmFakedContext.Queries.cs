@@ -317,11 +317,8 @@ namespace FakeXrmEasy
 
             query.TopCount = xlDoc.ToTopCount();
 
-            if (query.TopCount != null)
-            {
-                query.PageInfo.Count = query.TopCount.Value;
-                query.PageInfo.PageNumber = xlDoc.ToPageNumber() ?? 1;
-            }
+            query.PageInfo.Count = xlDoc.ToCount() ?? 0;
+            query.PageInfo.PageNumber = xlDoc.ToPageNumber() ?? 1;
 
             var linkedEntities = xlDoc.ToLinkEntities(context);
             foreach (var le in linkedEntities)
@@ -391,21 +388,6 @@ namespace FakeXrmEasy
 
             //Project the attributes in the root column set  (must be applied after the where and order clauses, not before!!)
             query = query.Select(x => x.Clone(x.GetType()).ProjectAttributes(qe, context));
-
-            //Apply TopCount
-
-            if (qe.PageInfo != null && qe.PageInfo.Count > 0 && qe.PageInfo.PageNumber > 0)
-            {
-                //selecting 1 extra to get calculate if there are more records to fetch
-                query = query.Skip(qe.PageInfo.Count * (qe.PageInfo.PageNumber - 1));
-            }
-
-            if (qe.TopCount == null)
-            {
-                qe.TopCount = context.MaxRetrieveCount;
-            }
-
-            query = query.Take(qe.TopCount.Value);
 
             return query;
         }
@@ -804,14 +786,14 @@ namespace FakeXrmEasy
 
         protected static Expression GetAppropiateCastExpressionBasedOnDateTime(Expression input, object value)
         {
-            //Convert to DateTime if string
-            DateTime dtDateTimeConversion;
-            if (value != null && DateTime.TryParse(value.ToString(), out dtDateTimeConversion))
+            // Convert to DateTime if string
+            DateTime _;
+            if (value is DateTime || value is string && DateTime.TryParse(value.ToString(), out _))
             {
                 return Expression.Convert(input, typeof(DateTime));
             }
 
-            return input; //return directly
+            return input; // return directly
         }
 
         protected static Expression GetAppropiateCastExpressionDefault(Expression input, object value)
@@ -963,7 +945,7 @@ namespace FakeXrmEasy
 
                     expOrValues = Expression.Or(expOrValues, Expression.Equal(
                                 transformedExpression,
-                                GetAppropiateTypedValueAndType(value, c.AttributeType)));
+                                TransformExpressionValueBasedOnOperator(c.CondExpression.Operator, GetAppropiateTypedValueAndType(value, c.AttributeType))));
 
 
                 }
@@ -1043,10 +1025,13 @@ namespace FakeXrmEasy
             BinaryExpression expOrValues = Expression.Or(Expression.Constant(false), Expression.Constant(false));
             foreach (object value in c.Values)
             {
+                var leftHandSideExpression = GetAppropiateCastExpressionBasedOnType(tc.AttributeType, getAttributeValueExpr, value);
+                var transformedExpression = TransformExpressionValueBasedOnOperator(tc.CondExpression.Operator, leftHandSideExpression);
+
                 expOrValues = Expression.Or(expOrValues,
                         Expression.GreaterThan(
-                            GetAppropiateCastExpressionBasedOnType(tc.AttributeType, getAttributeValueExpr, value),
-                            GetAppropiateTypedValueAndType(value, tc.AttributeType)));
+                            transformedExpression,
+                            TransformExpressionValueBasedOnOperator(tc.CondExpression.Operator, GetAppropiateTypedValueAndType(value, tc.AttributeType))));
             }
             return Expression.AndAlso(
                             containsAttributeExpr,
@@ -1070,10 +1055,13 @@ namespace FakeXrmEasy
             BinaryExpression expOrValues = Expression.Or(Expression.Constant(false), Expression.Constant(false));
             foreach (object value in c.Values)
             {
+                var leftHandSideExpression = GetAppropiateCastExpressionBasedOnType(tc.AttributeType, getAttributeValueExpr, value);
+                var transformedExpression = TransformExpressionValueBasedOnOperator(tc.CondExpression.Operator, leftHandSideExpression);
+
                 expOrValues = Expression.Or(expOrValues,
                         Expression.LessThan(
-                            GetAppropiateCastExpressionBasedOnType(tc.AttributeType, getAttributeValueExpr, value),
-                            GetAppropiateTypedValueAndType(value, tc.AttributeType)));
+                            transformedExpression,
+                            TransformExpressionValueBasedOnOperator(tc.CondExpression.Operator, GetAppropiateTypedValueAndType(value, tc.AttributeType))));
             }
             return Expression.AndAlso(
                             containsAttributeExpr,
