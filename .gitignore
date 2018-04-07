@@ -192,9 +192,13 @@ ModelManifest.xml
 .fake/
 tools/
 nuget/
-test/
 build/
 /packages
+
+# Test folder except test reports
+!test/
+test/*
+!test/reports/
 
 #Visual Studio
 .vs/
