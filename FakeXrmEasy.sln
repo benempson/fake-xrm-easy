@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2005
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FakeXrmEasy", "FakeXrmEasy\FakeXrmEasy.csproj", "{1FF34479-D38A-4B6B-86A7-B48182403437}"
 EndProject
@@ -83,8 +83,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		System.ServiceModel.Internals.dll = System.ServiceModel.Internals.dll
 		xunit.dll = xunit.dll
 	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "packages", "packages", "{0C674033-581D-4EB9-A2A2-79D77ABE0207}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "packages", "packages", "{F2B94F3A-7821-4BE1-8BAC-2B7FA07FEA93}"
 	ProjectSection(SolutionItems) = preProject
@@ -323,6 +321,9 @@ Global
 		{2AFDE012-E9AE-4BDD-A664-445C121466D1} = {6F09E415-3E7D-468E-A1D4-74A8C43267BB}
 		{DABE779C-7900-4357-A67E-890FCE4B67BD} = {7B1103ED-3843-4670-A8DB-F462B4C8FBE2}
 		{A4AE544E-ECE6-4EF9-B60A-C2BE7428EA14} = {7B1103ED-3843-4670-A8DB-F462B4C8FBE2}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1DDC73D2-E13C-4677-A787-D6A543426492}
 	EndGlobalSection
 	GlobalSection(CRMSolutionProperties) = preSolution
 		SolutionIsBoundToCRM = True
