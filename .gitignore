@@ -193,6 +193,7 @@ ModelManifest.xml
 tools/
 nuget/
 build/
+/packages
 
 # Test folder except test reports
 !test/
