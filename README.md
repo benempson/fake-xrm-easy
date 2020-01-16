@@ -1,22 +1,25 @@
-﻿Fake Xrm Easy: TDD for Dynamics CRM and Dynamics 365 made simple
+﻿Fake Xrm Easy: TDD for Dynamics CRM and Dynamics 365 (or now Common Data Service for Apps) made simple
 =================================================================================
 
 |Build|Line Coverage|Branch Coverage|
 |-----------|-----|-----------------|
-|[![Build status](https://ci.appveyor.com/api/projects/status/2g8yc8jg817746du?svg=true)](https://ci.appveyor.com/project/Jordi/fake-xrm-easy)|[![Line coverage](https://cdn.rawgit.com/jordimontana82/fake-xrm-easy/master/test/reports/badge_linecoverage.svg?v=1.41.0)](https://cdn.rawgit.com/jordimontana82/fake-xrm-easy/master/test/reports/index.htm?v=1.41.0)|[![Branch coverage](https://cdn.rawgit.com/jordimontana82/fake-xrm-easy/master/test/reports/badge_branchcoverage.svg?v=1.41.0)](https://cdn.rawgit.com/jordimontana82/fake-xrm-easy/master/test/reports/index.htm?v=1.41.0)|
+|[![Build status](https://ci.appveyor.com/api/projects/status/2g8yc8jg817746du?svg=true)](https://ci.appveyor.com/project/Jordi/fake-xrm-easy)|[![Line coverage](https://cdn.rawgit.com/jordimontana82/fake-xrm-easy/master/test/reports/badge_linecoverage.svg?v=1.55.0)](https://cdn.rawgit.com/jordimontana82/fake-xrm-easy/master/test/reports/index.htm?v=1.55.0)|[![Branch coverage](https://cdn.rawgit.com/jordimontana82/fake-xrm-easy/master/test/reports/badge_branchcoverage.svg?v=1.55.0)](https://cdn.rawgit.com/jordimontana82/fake-xrm-easy/master/test/reports/index.htm?v=1.55.0)|
 
 <b>Streamline unit testing</b> in Dynamics CRM by faking the `IOrganizationService` to work with an in-memory context.
 
 <b>Drive your development</b> by unit testing any plugin, code activity, or 3rd party app using the `OrganizationService` easier and faster than ever before.
 
-|Version|NuGet|
-|-----------|-----|
-|Dynamics v9|[![Nuget](https://buildstats.info/nuget/fakexrmeasy.9?v=1.41.0)](https://www.nuget.org/packages/fakexrmeasy.9)|
-|Dynamics 365|[![Nuget](https://buildstats.info/nuget/fakexrmeasy.365?v=1.41.0)](https://www.nuget.org/packages/fakexrmeasy.365)|
-|Dynamics CRM 2016|[![Nuget](https://buildstats.info/nuget/fakexrmeasy.2016?v=1.41.0)](https://www.nuget.org/packages/fakexrmeasy.2016)|
-|Dynamics CRM 2015|[![Nuget](https://buildstats.info/nuget/fakexrmeasy.2015?v=1.41.0)](https://www.nuget.org/packages/fakexrmeasy.2015)|
-|Dynamics CRM 2013|[![Nuget](https://buildstats.info/nuget/fakexrmeasy.2013?v=1.41.0)](https://www.nuget.org/packages/fakexrmeasy.2013)|
-|Dynamics CRM 2011|[![Nuget](https://buildstats.info/nuget/fakexrmeasy?v=1.41.0)](https://www.nuget.org/packages/fakexrmeasy)|
+<b>Note: To keep up to date with client-side unit testing version of this framework, please [have a look at this repo](http://github.com/jordimontana82/fake-xrm-easy-js) and samples in this other [sample code repo](http://github.com/jordimontana82/fake-xrm-easy-js-samples) </b>
+
+
+|Version|Package Name|NuGet|
+|-----------|------|-----|
+|Dynamics v9 (>= 9.x)|FakeXrmEasy.9|[![Nuget](https://buildstats.info/nuget/fakexrmeasy.9?v=1.55.0)](https://www.nuget.org/packages/fakexrmeasy.9)|
+|Dynamics 365 (8.2.x)|FakeXrmEasy.365|[![Nuget](https://buildstats.info/nuget/fakexrmeasy.365?v=1.55.0)](https://www.nuget.org/packages/fakexrmeasy.365)|
+|Dynamics CRM 2016 ( >= 8.0 && <= 8.1)|FakeXrmEasy.2016|[![Nuget](https://buildstats.info/nuget/fakexrmeasy.2016?v=1.55.0)](https://www.nuget.org/packages/fakexrmeasy.2016)|
+|Dynamics CRM 2015 (7.x)|FakeXrmEasy.2015|[![Nuget](https://buildstats.info/nuget/fakexrmeasy.2015?v=1.55.0)](https://www.nuget.org/packages/fakexrmeasy.2015)|
+|Dynamics CRM 2013 (6.x)|FakeXrmEasy.2013|[![Nuget](https://buildstats.info/nuget/fakexrmeasy.2013?v=1.55.0)](https://www.nuget.org/packages/fakexrmeasy.2013)|
+|Dynamics CRM 2011 (5.x)|FakeXrmEasy|[![Nuget](https://buildstats.info/nuget/fakexrmeasy?v=1.55.0)](https://www.nuget.org/packages/fakexrmeasy)|
 
 Supports Dynamics CRM 2011, 2013, 2015, 2016, and Dynamics 365 (8.x and 9.x). <b>NOTE:</b> With the release of Dynamics 365 v9 we are changing the naming convention for new packages to match the major version.
 
@@ -46,7 +49,7 @@ Please consider the below guidelines for contributing to the project:
 
 * <u>Provide a unit test</u> to reproduce any issues detected where possible. 
 * Attach all generated early bound typed entities required (if you're using early bound).
-* Finally, if you are able to even fix the issue yourself, which would be <i>awesome</i>, please do [fork](https://github.com/jordimontana82/fake-xrm-easy/fork) the project and submit a [pull request](https://github.com/jordimontana82/fake-xrm-easy/pulls). We'll thank you forever and ever. 
+* Finally, if you are even able to fix the issue yourself, which would be <i>awesome</i>, please do [fork](https://github.com/jordimontana82/fake-xrm-easy/fork) the project and submit a [pull request](https://github.com/jordimontana82/fake-xrm-easy/pulls). We'll thank you forever and ever. 
 
 ## Roadmap
 
@@ -64,3 +67,4 @@ FetchXml implementation:
 ## Tests disappeared?
 
 Try deleting anything under the VS test explorer cache: `%Temp%\VisualStudioTestExplorerExtensions`
+

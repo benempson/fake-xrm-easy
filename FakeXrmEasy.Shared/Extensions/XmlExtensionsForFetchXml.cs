@@ -11,7 +11,7 @@ namespace FakeXrmEasy.Extensions.FetchXml
 {
     public static class XmlExtensionsForFetchXml
     {
-        private static IEnumerable<ConditionOperator> OperatorsNotToConvertArray = new []
+        private static IEnumerable<ConditionOperator> OperatorsNotToConvertArray = new[]
         {
 #if FAKE_XRM_EASY_2015 || FAKE_XRM_EASY_2016 || FAKE_XRM_EASY_365 || FAKE_XRM_EASY_9
             ConditionOperator.OlderThanXWeeks,
@@ -20,12 +20,13 @@ namespace FakeXrmEasy.Extensions.FetchXml
             ConditionOperator.OlderThanXHours,
             ConditionOperator.OlderThanXMinutes,
 #endif
-            ConditionOperator.OlderThanXMonths,            
+            ConditionOperator.OlderThanXMonths,
             ConditionOperator.LastXDays,
             ConditionOperator.LastXHours,
             ConditionOperator.LastXMonths,
             ConditionOperator.LastXWeeks,
-            ConditionOperator.LastXYears
+            ConditionOperator.LastXYears,
+            ConditionOperator.NextXWeeks
         };
 
         public static bool IsAttributeTrue(this XElement elem, string attributeName)
@@ -72,8 +73,9 @@ namespace FakeXrmEasy.Extensions.FetchXml
                         return elem.GetAttribute("alias") != null
                             && elem.GetAttribute("attribute") == null;
                     }
-                    else {
-                        return elem.GetAttribute("attribute") != null;                               
+                    else
+                    {
+                        return elem.GetAttribute("attribute") != null;
                     }
 
                 case "condition":
@@ -134,6 +136,19 @@ namespace FakeXrmEasy.Extensions.FetchXml
             return iCount;
         }
 
+
+        public static bool ToReturnTotalRecordCount(this XElement el)
+        {
+            var returnTotalRecordCountAttr = el.GetAttribute("returntotalrecordcount");
+            if (returnTotalRecordCountAttr == null) return false;
+
+            bool bReturnCount;
+            if (!bool.TryParse(returnTotalRecordCountAttr.Value, out bReturnCount))
+                throw new Exception("returntotalrecordcount attribute in fetch node must be an boolean");
+
+            return bReturnCount;
+        }
+
         public static int? ToPageNumber(this XElement el)
         {
             var pageAttr = el.GetAttribute("page");
@@ -172,6 +187,14 @@ namespace FakeXrmEasy.Extensions.FetchXml
                     .ToCount();
         }
 
+        public static bool ToReturnTotalRecordCount(this XDocument xlDoc)
+        {
+            return xlDoc.Elements()   //fetch
+                    .FirstOrDefault()
+                    .ToReturnTotalRecordCount();
+        }
+
+
         public static int? ToPageNumber(this XDocument xlDoc)
         {
             //Check if all-attributes exist
@@ -192,11 +215,11 @@ namespace FakeXrmEasy.Extensions.FetchXml
 
         public static string GetAssociatedEntityNameForConditionExpression(this XElement el)
         {
-            
-            while(el != null)
+
+            while (el != null)
             {
                 var parent = el.Parent;
-                if(parent.Name.LocalName.Equals("entity") || parent.Name.LocalName.Equals("link-entity"))
+                if (parent.Name.LocalName.Equals("entity") || parent.Name.LocalName.Equals("link-entity"))
                 {
                     return parent.GetAttribute("name").Value;
                 }
@@ -214,9 +237,9 @@ namespace FakeXrmEasy.Extensions.FetchXml
             linkEntity.LinkFromEntityName = el.Parent.GetAttribute("name").Value;
             linkEntity.LinkFromAttributeName = el.GetAttribute("to").Value;
             linkEntity.LinkToAttributeName = el.GetAttribute("from").Value;
-            linkEntity.LinkToEntityName = el.GetAttribute("name").Value;  
+            linkEntity.LinkToEntityName = el.GetAttribute("name").Value;
 
-            if(el.GetAttribute("alias") != null)
+            if (el.GetAttribute("alias") != null)
             {
                 linkEntity.EntityAlias = el.GetAttribute("alias").Value;
             }
@@ -224,7 +247,7 @@ namespace FakeXrmEasy.Extensions.FetchXml
             //Join operator
             if (el.GetAttribute("link-type") != null)
             {
-                switch(el.GetAttribute("link-type").Value)
+                switch (el.GetAttribute("link-type").Value)
                 {
                     case "outer":
                         linkEntity.JoinOperator = JoinOperator.LeftOuter;
@@ -241,7 +264,7 @@ namespace FakeXrmEasy.Extensions.FetchXml
                                 .Select(e => e.ToLinkEntity(ctx))
                                 .ToList();
 
-            foreach(var le in convertedLinkEntityNodes)
+            foreach (var le in convertedLinkEntityNodes)
             {
                 linkEntity.LinkEntities.Add(le);
             }
@@ -290,7 +313,7 @@ namespace FakeXrmEasy.Extensions.FetchXml
             var filterExpression = new FilterExpression();
 
             var filterType = elem.GetAttribute("type");
-            if(filterType == null)
+            if (filterType == null)
             {
                 filterExpression.FilterOperator = LogicalOperator.And; //By default
             }
@@ -384,7 +407,7 @@ namespace FakeXrmEasy.Extensions.FetchXml
                 case "like":
                     op = ConditionOperator.Like;
 
-                    if(value != null)
+                    if (value != null)
                     {
                         if (value.StartsWith("%") && !value.EndsWith("%"))
                             op = ConditionOperator.EndsWith;
@@ -396,10 +419,8 @@ namespace FakeXrmEasy.Extensions.FetchXml
                         value = value.Replace("%", "");
                     }
                     break;
-
                 case "not-like":
                     op = ConditionOperator.NotLike;
-
                     if (value != null)
                     {
                         if (value.StartsWith("%") && !value.EndsWith("%"))
@@ -412,23 +433,18 @@ namespace FakeXrmEasy.Extensions.FetchXml
                         value = value.Replace("%", "");
                     }
                     break;
-
                 case "gt":
                     op = ConditionOperator.GreaterThan;
                     break;
-
                 case "ge":
                     op = ConditionOperator.GreaterEqual;
                     break;
-
                 case "lt":
                     op = ConditionOperator.LessThan;
                     break;
-
                 case "le":
                     op = ConditionOperator.LessEqual;
                     break;
-
                 case "on":
                     op = ConditionOperator.On;
                     break;
@@ -471,6 +487,47 @@ namespace FakeXrmEasy.Extensions.FetchXml
                 case "neq-businessid":
                     op = ConditionOperator.NotEqualBusinessId;
                     break;
+                case "next-x-weeks":
+                    op = ConditionOperator.NextXWeeks;
+                    break;
+                case "next-seven-days":
+                    op = ConditionOperator.Next7Days;
+                    break;
+                case "this-year":
+                    op = ConditionOperator.ThisYear;
+                    break;
+                case "last-year":
+                    op = ConditionOperator.LastYear;
+                    break;
+                case "next-year":
+                    op = ConditionOperator.NextYear;
+                    break;
+                case "this-month":
+                    op = ConditionOperator.ThisMonth;
+                    break;
+                case "last-month":
+                    op = ConditionOperator.LastMonth;
+                    break;
+                case "next-month":
+                    op = ConditionOperator.NextMonth;
+                    break;
+                case "last-week":
+                    op = ConditionOperator.LastWeek;
+                    break;
+                case "this-week":
+                    op = ConditionOperator.ThisWeek;
+                    break;
+                case "next-week":
+                    op = ConditionOperator.NextWeek;
+                    break;
+#if FAKE_XRM_EASY_9
+                case "contain-values":
+                    op = ConditionOperator.ContainValues;
+                    break;
+                case "not-contain-values":
+                    op = ConditionOperator.DoesNotContainValues;
+                    break;
+#endif
                 default:
                     throw PullRequestException.FetchXmlOperatorNotImplemented(elem.GetAttribute("operator").Value);
             }
@@ -493,7 +550,7 @@ namespace FakeXrmEasy.Extensions.FetchXml
             if (value != null)
             {
 #if FAKE_XRM_EASY_2013 || FAKE_XRM_EASY_2015 || FAKE_XRM_EASY_2016 || FAKE_XRM_EASY_365 || FAKE_XRM_EASY_9
-                if(string.IsNullOrWhiteSpace(conditionEntityName))
+                if (string.IsNullOrWhiteSpace(conditionEntityName))
                 {
                     return new ConditionExpression(attributeName, op, GetConditionExpressionValueCast(value, ctx, entityName, attributeName, op));
                 }
@@ -529,12 +586,16 @@ namespace FakeXrmEasy.Extensions.FetchXml
 
         public static object GetValueBasedOnType(Type t, string value)
         {
-            if(t == typeof(int) 
+            if (t == typeof(int)
                 || t == typeof(int?)
-                || t.IsOptionSet())
+                || t.IsOptionSet()
+#if FAKE_XRM_EASY_9
+                || t.IsOptionSetValueCollection()
+#endif
+            )
             {
                 int intValue = 0;
-                
+
                 if (int.TryParse(value, out intValue))
                 {
                     if (t.IsOptionSet())
@@ -576,12 +637,12 @@ namespace FakeXrmEasy.Extensions.FetchXml
                     throw new Exception("Guid value expected");
                 }
             }
-            else if (t == typeof(decimal) 
+            else if (t == typeof(decimal)
                 || t == typeof(decimal?)
                 || t == typeof(Money))
             {
                 decimal decValue = 0;
-                if(decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out decValue))
+                if (decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out decValue))
                 {
                     if (t == typeof(Money))
                     {
@@ -647,7 +708,8 @@ namespace FakeXrmEasy.Extensions.FetchXml
                 }
                 else
                 {
-                    switch (value) {
+                    switch (value)
+                    {
                         case "0": return false;
                         case "1": return true;
                         default:
@@ -673,7 +735,7 @@ namespace FakeXrmEasy.Extensions.FetchXml
                 var reflectedType = ctx.FindReflectedType(sEntityName);
                 if (reflectedType != null)
                 {
-                    var attributeType = ctx.FindReflectedAttributeType(reflectedType, sAttributeName);
+                    var attributeType = ctx.FindReflectedAttributeType(reflectedType, sEntityName, sAttributeName);
                     if (attributeType != null)
                     {
                         try
@@ -727,9 +789,9 @@ namespace FakeXrmEasy.Extensions.FetchXml
             if (DateTime.TryParse(value, out dtValue))
                 bIsDateTime = true;
 
-            if(bIsNumeric || bIsDateTime)
+            if (bIsNumeric || bIsDateTime)
             {
-                throw new Exception("When using arithmetic values in Fetch a ProxyTypesAssembly must be used in order to know which types to cast values to."); 
+                throw new Exception("When using arithmetic values in Fetch a ProxyTypesAssembly must be used in order to know which types to cast values to.");
             }
 
             //Default value

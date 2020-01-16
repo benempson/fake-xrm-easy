@@ -26,13 +26,41 @@ namespace FakeXrmEasy
 
         private readonly Lazy<XrmFakedTracingService> _tracingService = new Lazy<XrmFakedTracingService>(() => new XrmFakedTracingService());
 
+        /// <summary>
+        /// All proxy type assemblies available on mocked database.
+        /// </summary>
+        private List<Assembly> ProxyTypesAssemblies { get; set; }
+
         protected internal XrmFakedTracingService TracingService => _tracingService.Value;
 
         protected internal bool Initialised { get; set; }
 
         public Dictionary<string, Dictionary<Guid, Entity>> Data { get; set; }
 
-        public Assembly ProxyTypesAssembly { get; set; }
+        /// <summary>
+        /// Specify which assembly is used to search for early-bound proxy
+        /// types when used within simulated CRM context.
+        ///
+        /// If you want to specify multiple different assemblies for early-bound
+        /// proxy types please use <see cref="EnableProxyTypes(Assembly)"/>
+        /// instead.
+        /// </summary>
+        public Assembly ProxyTypesAssembly
+        {
+            get
+            {
+                // TODO What we should do when ProxyTypesAssemblies contains multiple assemblies? One shouldn't throw exceptions from properties.
+                return ProxyTypesAssemblies.FirstOrDefault();
+            }
+            set
+            {
+                ProxyTypesAssemblies = new List<Assembly>();
+                if (value != null)
+                {
+                    ProxyTypesAssemblies.Add(value);
+                }
+            }
+        }
 
         /// <summary>
         /// Sets the user to assign the CreatedBy and ModifiedBy properties when entities are added to the context.
@@ -95,6 +123,8 @@ namespace FakeXrmEasy
             UsePipelineSimulation = false;
 
             InitializationLevel = EntityInitializationLevel.Default;
+
+            ProxyTypesAssemblies = new List<Assembly>();
         }
 
         /// <summary>
@@ -124,6 +154,31 @@ namespace FakeXrmEasy
         public void Initialize(Entity e)
         {
             this.Initialize(new List<Entity>() { e });
+        }
+
+        /// <summary>
+        /// Enables support for the early-cound types exposed in a specified assembly.
+        /// </summary>
+        /// <param name="assembly">
+        /// An assembly containing early-bound entity types.
+        /// </param>
+        /// <remarks>
+        /// See issue #334 on GitHub. This has quite similar idea as is on SDK method
+        /// https://docs.microsoft.com/en-us/dotnet/api/microsoft.xrm.sdk.client.organizationserviceproxy.enableproxytypes.
+        /// </remarks>
+        public void EnableProxyTypes(Assembly assembly)
+        {
+            if (assembly == null)
+            {
+                throw new ArgumentNullException(nameof(assembly));
+            }
+
+            if (ProxyTypesAssemblies.Contains(assembly))
+            {
+                throw new InvalidOperationException($"Proxy types assembly { assembly.GetName().Name } is already enabled.");
+            }
+
+            ProxyTypesAssemblies.Add(assembly);
         }
 
         public void AddExecutionMock<T>(ServiceRequestExecution mock) where T : OrganizationRequest
@@ -232,6 +287,7 @@ namespace FakeXrmEasy
         /// Deprecated. Use GetOrganizationService instead
         /// </summary>
         /// <returns></returns>
+        [Obsolete("Use GetOrganizationService instead")]
         public IOrganizationService GetFakedOrganizationService()
         {
             return GetFakedOrganizationService(this);
@@ -272,29 +328,26 @@ namespace FakeXrmEasy
         /// <param name="fakedService"></param>
         public static void FakeExecute(XrmFakedContext context, IOrganizationService fakedService)
         {
+            OrganizationResponse response = null;
+            Func<OrganizationRequest, OrganizationResponse> execute = (req) =>
+            {
+                if (context.ExecutionMocks.ContainsKey(req.GetType()))
+                    return context.ExecutionMocks[req.GetType()].Invoke(req);
+
+                if (context.FakeMessageExecutors.ContainsKey(req.GetType())
+                    && context.FakeMessageExecutors[req.GetType()].CanExecute(req))
+                    return context.FakeMessageExecutors[req.GetType()].Execute(req, context);
+
+                if (req.GetType() == typeof(OrganizationRequest)
+                    && context.GenericFakeMessageExecutors.ContainsKey(req.RequestName))
+                    return context.GenericFakeMessageExecutors[req.RequestName].Execute(req, context);
+
+                throw PullRequestException.NotImplementedOrganizationRequest(req.GetType());
+            };
+
             A.CallTo(() => fakedService.Execute(A<OrganizationRequest>._))
-                .ReturnsLazily((OrganizationRequest req) =>
-                {
-                    if (context.ExecutionMocks.ContainsKey(req.GetType()))
-                    {
-                        return context.ExecutionMocks[req.GetType()].Invoke(req);
-                    }
-
-                    if (context.FakeMessageExecutors.ContainsKey(req.GetType()))
-                    {
-                        if (context.FakeMessageExecutors[req.GetType()].CanExecute(req))
-                        {
-                            return context.FakeMessageExecutors[req.GetType()].Execute(req, context);
-                        }
-                    }
-
-                    if (req.GetType() == typeof(OrganizationRequest) && context.GenericFakeMessageExecutors.ContainsKey(req.RequestName))
-                    {
-                        return context.GenericFakeMessageExecutors[req.RequestName].Execute(req, context);
-                    }
-
-                    throw PullRequestException.NotImplementedOrganizationRequest(req.GetType());
-                });
+                .Invokes((OrganizationRequest req) => response = execute(req))
+                .ReturnsLazily((OrganizationRequest req) => response);
         }
 
         public static void FakeAssociate(XrmFakedContext context, IOrganizationService fakedService)
@@ -339,32 +392,36 @@ namespace FakeXrmEasy
 
         public static void FakeRetrieveMultiple(XrmFakedContext context, IOrganizationService fakedService)
         {
+            EntityCollection entities = null;
+            Func<QueryBase, EntityCollection> retriveMultiple = (QueryBase req) =>
+            {
+                var request = new RetrieveMultipleRequest { Query = req };
+
+                var executor = new RetrieveMultipleRequestExecutor();
+                var response = executor.Execute(request, context) as RetrieveMultipleResponse;
+
+                return response.EntityCollection;
+            };
+
             //refactored from RetrieveMultipleExecutor
             A.CallTo(() => fakedService.RetrieveMultiple(A<QueryBase>._))
-                .ReturnsLazily((QueryBase req) =>
-                {
-                    var request = new RetrieveMultipleRequest()
-                    {
-                        Query = req
-                    };
-
-                    var executor = new RetrieveMultipleRequestExecutor();
-                    var response = executor.Execute(request, context) as RetrieveMultipleResponse;
-
-                    QueryExpression qe = req as QueryExpression;
-                    if (qe?.PageInfo.ReturnTotalRecordCount == true)
-                    {
-                        response.EntityCollection.TotalRecordCount = response.EntityCollection.Entities.Count;
-                    }
-
-                    return response.EntityCollection;
-                });
+                .Invokes((QueryBase req) => entities = retriveMultiple(req))
+                .ReturnsLazily((QueryBase req) => entities);
         }
 
         public IServiceEndpointNotificationService GetFakedServiceEndpointNotificationService()
         {
             return _serviceEndpointNotificationService ??
-                   ( _serviceEndpointNotificationService = A.Fake<IServiceEndpointNotificationService>());
+                   (_serviceEndpointNotificationService = A.Fake<IServiceEndpointNotificationService>());
         }
+#if FAKE_XRM_EASY_9
+        public IEntityDataSourceRetrieverService GetFakedEntityDataSourceRetrieverService()
+        {
+            var service = A.Fake<IEntityDataSourceRetrieverService>();
+            A.CallTo(() => service.RetrieveEntityDataSource())
+                .ReturnsLazily(() => EntityDataSourceRetriever);
+            return service;
+        }
+#endif
     }
 }
