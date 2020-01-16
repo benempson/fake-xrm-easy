@@ -203,3 +203,4 @@ test/*
 #Visual Studio
 .vs/
 packages/
+/FakeXrmEasy.9/app.config
