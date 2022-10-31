@@ -1,6 +1,6 @@
 ﻿using FakeItEasy;
 using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Workflow;
+//using Microsoft.Xrm.Sdk.Workflow;
 using System;
 using System.Activities;
 using System.Collections.Generic;
@@ -75,7 +75,7 @@ namespace FakeXrmEasy
                 debugText += "Invoker created" + Environment.NewLine;
                 debugText += "Adding extensions..." + Environment.NewLine;
                 invoker.Extensions.Add<ITracingService>(() => TracingService);
-                invoker.Extensions.Add<IWorkflowContext>(() => wfContext);
+                //invoker.Extensions.Add<IWorkflowContext>(() => wfContext);
                 invoker.Extensions.Add(() =>
                 {
                     var fakedServiceFactory = A.Fake<IOrganizationServiceFactory>();

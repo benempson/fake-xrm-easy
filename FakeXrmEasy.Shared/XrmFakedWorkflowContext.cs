@@ -1,10 +1,10 @@
 ﻿using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Workflow;
+//using Microsoft.Xrm.Sdk.Workflow;
 using System;
 
 namespace FakeXrmEasy
 {
-    public class XrmFakedWorkflowContext : IWorkflowContext
+    public class XrmFakedWorkflowContext // : IWorkflowContext
     {
         public Guid BusinessUnitId { get; set; }
 
@@ -40,7 +40,7 @@ namespace FakeXrmEasy
 
         public EntityReference OwningExtension { get; set; }
 
-        public IWorkflowContext ParentContext { get; set; }
+        //public IWorkflowContext ParentContext { get; set; }
 
         public EntityImageCollection PostEntityImages { get; set; }
 

@@ -1,24 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.Xrm.Sdk;
 using System.Configuration;
 using System.IO;
-
 using System.Xml.Linq;
 using System.Linq;
-
 using System.IO.Compression;
 using System.Runtime.Serialization;
 
-#if FAKE_XRM_EASY_2016 || FAKE_XRM_EASY_365 || FAKE_XRM_EASY_9
-using Microsoft.Xrm.Tooling.Connector;
-#else
-
-using Microsoft.Xrm.Client;
-using Microsoft.Xrm.Client.Services;
-
-#endif
+using Microsoft.Xrm.Sdk;
+using Microsoft.PowerPlatform.Dataverse.Client;
 
 namespace FakeXrmEasy
 {
@@ -77,7 +68,7 @@ namespace FakeXrmEasy
 #if FAKE_XRM_EASY_2016 || FAKE_XRM_EASY_365 || FAKE_XRM_EASY_9
 
             // Connect to the CRM web service using a connection string.
-            CrmServiceClient client = new Microsoft.Xrm.Tooling.Connector.CrmServiceClient(connectionString);
+            ServiceClient client = new Microsoft.PowerPlatform.Dataverse.Client.ServiceClient(connectionString);
             return client;
 
 #else
