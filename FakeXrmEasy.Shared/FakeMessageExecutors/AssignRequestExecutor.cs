@@ -2,7 +2,6 @@
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Xrm.Sdk;
 using System;
-using System.Collections.Generic;
 using System.ServiceModel;
 
 namespace FakeXrmEasy.FakeMessageExecutors

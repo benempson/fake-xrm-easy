@@ -20,18 +20,18 @@ namespace FakeXrmEasy
         /// <returns></returns>
         IOrganizationService GetOrganizationService();
 
-        /// <summary>
-        /// DEPRECATED: Consider using GetOrganizationService instead
-        /// </summary>
-        /// <returns></returns>
-        IOrganizationService GetFakedOrganizationService();
+        ///// <summary>
+        ///// DEPRECATED: Consider using GetOrganizationService instead
+        ///// </summary>
+        ///// <returns></returns>
+        //IOrganizationService GetOrganizationService();
 
         ///// <summary>
         ///// Returns a faked organization service proxy that will execute CRUD in-memory operations and other requests against this faked context
         ///// </summary>
         ///// <param name="context"></param>
         ///// <returns></returns>
-        //OrganizationServiceProxy GetFakedOrganizationServiceProxy();
+        //OrganizationServiceProxy GetOrganizationServiceProxy();
 
 
         /// <summary>

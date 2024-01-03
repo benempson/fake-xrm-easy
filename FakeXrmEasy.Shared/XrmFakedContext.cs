@@ -280,20 +280,20 @@ namespace FakeXrmEasy
                 Service = GetOrganizationService();
                 return Service;
             }
-            return GetFakedOrganizationService(this);
+            return GetOrganizationService(this);
         }
 
-        /// <summary>
-        /// Deprecated. Use GetOrganizationService instead
-        /// </summary>
-        /// <returns></returns>
-        [Obsolete("Use GetOrganizationService instead")]
-        public IOrganizationService GetFakedOrganizationService()
-        {
-            return GetFakedOrganizationService(this);
-        }
+        ///// <summary>
+        ///// Deprecated. Use GetOrganizationService instead
+        ///// </summary>
+        ///// <returns></returns>
+        //[Obsolete("Use GetOrganizationService instead")]
+        //public IOrganizationService GetOrganizationService()
+        //{
+        //    return GetOrganizationService(this);
+        //}
 
-        protected IOrganizationService GetFakedOrganizationService(XrmFakedContext context)
+        protected IOrganizationService GetOrganizationService(XrmFakedContext context)
         {
             if (context.Service != null)
             {
