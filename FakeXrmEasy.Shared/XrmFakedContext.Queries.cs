@@ -1531,12 +1531,14 @@ namespace FakeXrmEasy
                 foreach (object value in c.Values)
                 {
                     var leftHandSideExpression = GetAppropiateCastExpressionBasedOnType(tc.AttributeType, getAttributeValueExpr, value);
-                    var transformedExpression = TransformExpressionValueBasedOnOperator(tc.CondExpression.Operator, leftHandSideExpression);
+                    var transformedLHSExpression = TransformExpressionValueBasedOnOperator(tc.CondExpression.Operator, leftHandSideExpression);
+                    var rhTypedValue = GetAppropiateTypedValueAndType(value, tc.AttributeType);
+                    var transformedRHSExpression = TransformExpressionValueBasedOnOperator(tc.CondExpression.Operator, rhTypedValue);
 
                     expOrValues = Expression.Or(expOrValues,
                             Expression.GreaterThan(
-                                transformedExpression,
-                                TransformExpressionValueBasedOnOperator(tc.CondExpression.Operator, GetAppropiateTypedValueAndType(value, tc.AttributeType))));
+                                transformedLHSExpression,
+                                transformedRHSExpression));
                 }
                 return Expression.AndAlso(
                                 containsAttributeExpr,
