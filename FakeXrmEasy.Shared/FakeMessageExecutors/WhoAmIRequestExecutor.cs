@@ -7,6 +7,8 @@ namespace FakeXrmEasy.FakeMessageExecutors
 {
     public class WhoAmIRequestExecutor : IFakeMessageExecutor
     {
+        public static readonly string ERROR_CALLERID_NULL = "CallerId is null, unable to respond!";
+
         public bool CanExecute(OrganizationRequest request)
         {
             return request is WhoAmIRequest;
@@ -15,6 +17,9 @@ namespace FakeXrmEasy.FakeMessageExecutors
         public OrganizationResponse Execute(OrganizationRequest request, XrmFakedContext ctx)
         {
             var req = request as WhoAmIRequest;
+
+            if (ctx.CallerId == null)
+                throw new Exception(ERROR_CALLERID_NULL);
 
             var callerId = ctx.CallerId.Id;
 
