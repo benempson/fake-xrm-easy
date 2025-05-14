@@ -4,8 +4,10 @@ using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Query;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace FakeXrmEasy.FakeMessageExecutors
 {
@@ -204,10 +206,61 @@ namespace FakeXrmEasy.FakeMessageExecutors
 
             foreach (var entity in input)
             {
-                if (!output.Any(i => i.LogicalName == entity.LogicalName && i.Attributes.SequenceEqual(entity.Attributes)))
-                {
+                if (output.Count == 0)
                     output.Add(entity);
+                else
+                {
+                    //BE 250514: If there are no entities of the same type, obviously it's not a duplicate!!
+                    List<Entity> checkEnts = output.Where(e => e.LogicalName == entity.LogicalName).ToList();
+                    if (checkEnts.Count == 0)
+                        output.Add(entity);
+                    else
+                    {
+                        StringBuilder entityAtts = new StringBuilder();
+
+                        foreach (KeyValuePair<string, object> kvp in entity.Attributes)
+                        {
+                            if (kvp.Value.GetType() == typeof(AliasedValue))
+                                entityAtts.AppendLine($"{kvp.Key}: {((AliasedValue)kvp.Value).Value}");
+                            else if (kvp.Value.GetType() == typeof(Money))
+                                entityAtts.AppendLine($"{kvp.Key}: {((Money)kvp.Value).Value}");
+                            else if (kvp.Value.GetType() == typeof(OptionSetValue))
+                                entityAtts.AppendLine($"{kvp.Key}: {((OptionSetValue)kvp.Value).Value}");
+                            else if (kvp.Value.GetType() == typeof(EntityReference))
+                                entityAtts.AppendLine($"{kvp.Key}: {((EntityReference)kvp.Value).Id}");
+                            else
+                                entityAtts.AppendLine($"{kvp.Key}: {kvp.Value}");
+                        }
+
+                        foreach (var entity2 in checkEnts)
+                        {
+                            StringBuilder entity2Atts = new StringBuilder();
+                            foreach (KeyValuePair<string, object> kvp in entity2.Attributes)
+                            {
+                                if (kvp.Value.GetType() == typeof(AliasedValue))
+                                    entity2Atts.AppendLine($"{kvp.Key}: {((AliasedValue)kvp.Value).Value}");
+                                else if (kvp.Value.GetType() == typeof(Money))
+                                    entity2Atts.AppendLine($"{kvp.Key}: {((Money)kvp.Value).Value}");
+                                else if (kvp.Value.GetType() == typeof(OptionSetValue))
+                                    entity2Atts.AppendLine($"{kvp.Key}: {((OptionSetValue)kvp.Value).Value}");
+                                else if (kvp.Value.GetType() == typeof(EntityReference))
+                                    entity2Atts.AppendLine($"{kvp.Key}: {((EntityReference)kvp.Value).Id}");
+                                else
+                                    entity2Atts.AppendLine($"{kvp.Key}: {kvp.Value}");
+                            }
+
+                            if (!entityAtts.ToString().Equals(entity2Atts.ToString()))
+                            {
+                                output.Add(entity);
+                            }
+                        }
+                    }
                 }
+                
+                //if (!output.Any(i => i.LogicalName == entity.LogicalName && i.Attributes.SequenceEqual(entity.Attributes)))
+                //{
+                //    output.Add(entity);
+                //}
             }
 
             return output;
