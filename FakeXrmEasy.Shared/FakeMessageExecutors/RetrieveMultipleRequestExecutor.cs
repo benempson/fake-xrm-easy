@@ -1,13 +1,14 @@
-﻿using FakeXrmEasy.Extensions;
-using FakeXrmEasy.Extensions.FetchXml;
-using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Messages;
-using Microsoft.Xrm.Sdk.Query;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+
+using FakeXrmEasy.Extensions;
+using FakeXrmEasy.Extensions.FetchXml;
+
+using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Messages;
+using Microsoft.Xrm.Sdk.Query;
 
 namespace FakeXrmEasy.FakeMessageExecutors
 {
@@ -135,9 +136,9 @@ namespace FakeXrmEasy.FakeMessageExecutors
             var response = new RetrieveMultipleResponse
             {
                 Results = new ParameterCollection
-                                 {
-                                    { "EntityCollection", new EntityCollection(recordsToReturn) }
-                                 }
+                {
+                    { "EntityCollection", new EntityCollection(recordsToReturn) }
+                }
             };
             response.EntityCollection.EntityName = entityName;
             response.EntityCollection.MoreRecords = (list.Count - pageSize * pageNumber) > 0;
@@ -216,44 +217,74 @@ namespace FakeXrmEasy.FakeMessageExecutors
                         output.Add(entity);
                     else
                     {
-                        StringBuilder entityAtts = new StringBuilder();
+                        bool isDup = false;
+                        bool checkAtts = false;
 
-                        foreach (KeyValuePair<string, object> kvp in entity.Attributes)
+                        if (entity.Id != Guid.Empty)
                         {
-                            if (kvp.Value.GetType() == typeof(AliasedValue))
-                                entityAtts.AppendLine($"{kvp.Key}: {((AliasedValue)kvp.Value).Value}");
-                            else if (kvp.Value.GetType() == typeof(Money))
-                                entityAtts.AppendLine($"{kvp.Key}: {((Money)kvp.Value).Value}");
-                            else if (kvp.Value.GetType() == typeof(OptionSetValue))
-                                entityAtts.AppendLine($"{kvp.Key}: {((OptionSetValue)kvp.Value).Value}");
-                            else if (kvp.Value.GetType() == typeof(EntityReference))
-                                entityAtts.AppendLine($"{kvp.Key}: {((EntityReference)kvp.Value).Id}");
-                            else
-                                entityAtts.AppendLine($"{kvp.Key}: {kvp.Value}");
+                            foreach (var entity2 in checkEnts)
+                            {
+                                if (entity2.Id == Guid.Empty)
+                                    throw new Exception("entity2 has no Id! Can't compare...");
+
+                                if (entity.Id == entity2.Id)
+                                {
+                                    isDup = true;
+                                    break;
+                                }
+                            }
                         }
 
-                        foreach (var entity2 in checkEnts)
+                        if (checkAtts)
                         {
-                            StringBuilder entity2Atts = new StringBuilder();
-                            foreach (KeyValuePair<string, object> kvp in entity2.Attributes)
+                            StringBuilder entityAtts = new StringBuilder();
+                            List<KeyValuePair<string, object>> atts = entity.Attributes.OrderBy(kvp => kvp.Key).ToList();
+
+                            foreach (KeyValuePair<string, object> kvp in atts)
                             {
                                 if (kvp.Value.GetType() == typeof(AliasedValue))
-                                    entity2Atts.AppendLine($"{kvp.Key}: {((AliasedValue)kvp.Value).Value}");
+                                    entityAtts.AppendLine($"{kvp.Key}: {((AliasedValue)kvp.Value).Value}");
                                 else if (kvp.Value.GetType() == typeof(Money))
-                                    entity2Atts.AppendLine($"{kvp.Key}: {((Money)kvp.Value).Value}");
+                                    entityAtts.AppendLine($"{kvp.Key}: {((Money)kvp.Value).Value}");
                                 else if (kvp.Value.GetType() == typeof(OptionSetValue))
-                                    entity2Atts.AppendLine($"{kvp.Key}: {((OptionSetValue)kvp.Value).Value}");
+                                    entityAtts.AppendLine($"{kvp.Key}: {((OptionSetValue)kvp.Value).Value}");
                                 else if (kvp.Value.GetType() == typeof(EntityReference))
-                                    entity2Atts.AppendLine($"{kvp.Key}: {((EntityReference)kvp.Value).Id}");
+                                    entityAtts.AppendLine($"{kvp.Key}: {((EntityReference)kvp.Value).Id}");
                                 else
-                                    entity2Atts.AppendLine($"{kvp.Key}: {kvp.Value}");
+                                    entityAtts.AppendLine($"{kvp.Key}: {kvp.Value}");
                             }
 
-                            if (!entityAtts.ToString().Equals(entity2Atts.ToString()))
+                            foreach (var entity2 in checkEnts)
                             {
-                                output.Add(entity);
+                                StringBuilder entity2Atts = new StringBuilder();
+                                List<KeyValuePair<string, object>> atts2 = entity2.Attributes.OrderBy(kvp => kvp.Key).ToList();
+
+                                foreach (KeyValuePair<string, object> kvp in atts2)
+                                {
+                                    if (kvp.Value.GetType() == typeof(AliasedValue))
+                                        entity2Atts.AppendLine($"{kvp.Key}: {((AliasedValue)kvp.Value).Value}");
+                                    else if (kvp.Value.GetType() == typeof(Money))
+                                        entity2Atts.AppendLine($"{kvp.Key}: {((Money)kvp.Value).Value}");
+                                    else if (kvp.Value.GetType() == typeof(OptionSetValue))
+                                        entity2Atts.AppendLine($"{kvp.Key}: {((OptionSetValue)kvp.Value).Value}");
+                                    else if (kvp.Value.GetType() == typeof(EntityReference))
+                                        entity2Atts.AppendLine($"{kvp.Key}: {((EntityReference)kvp.Value).Id}");
+                                    else
+                                        entity2Atts.AppendLine($"{kvp.Key}: {kvp.Value}");
+                                }
+
+                                //BE 250602: If there is a match, then this is a dup entity and we shouldn't check any further
+                                if (entityAtts.ToString().Equals(entity2Atts.ToString()))
+                                {
+                                    isDup = true;
+                                    break;
+                                }
                             }
                         }
+
+                        //BE 250602: If no dup was detected, then we can add the entity to the output
+                        if (!isDup)
+                            output.Add(entity);
                     }
                 }
                 
