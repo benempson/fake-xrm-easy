@@ -142,6 +142,42 @@ namespace FakeXrmEasy
             if (Data.ContainsKey(e.LogicalName) &&
                 Data[e.LogicalName].ContainsKey(e.Id))
             {
+                var originalEntity = CreateQuery(e.LogicalName).First(entity => entity.Id == e.Id);
+                if (originalEntity.Attributes.ContainsKey("statecode"))
+                {
+                    var originalStatecode = originalEntity["statecode"];
+                    var originalStateCodeValue = 1;
+                    if (originalStatecode is OptionSetValue)
+                    {
+                        originalStateCodeValue = (originalStatecode as OptionSetValue).Value;
+                    }
+                    else
+                    {
+                        originalStateCodeValue = Convert.ToInt32(originalStatecode);
+                    }
+
+                    object newStateCode = null;
+                    int newStateCodeValue = -1;
+                    if (e.Attributes.ContainsKey("statecode"))
+                    {
+                        newStateCode = e["statecode"];
+                        if (newStateCode is OptionSetValue)
+                        {
+                            newStateCodeValue = (newStateCode as OptionSetValue).Value;
+                        }
+                        else
+                        {
+                            newStateCodeValue = Convert.ToInt32(newStateCode);
+                        }
+                    }
+
+                    if (originalStateCodeValue != 0 && newStateCode != null && (int)newStateCodeValue != 0)
+                    {
+                        // The entity record was not found, return a CRM-ish update error message
+                        throw new FaultException<OrganizationServiceFault>(new OrganizationServiceFault(), $"{e.LogicalName} with Id {e.Id} can't be updated because it is in inactive status. Please use SetStateRequest to activate the record first.");
+                    }
+                }
+
                 if (this.UsePipelineSimulation)
                 {
                     ExecutePipelineStage("Update", ProcessingStepStage.Preoperation, ProcessingStepMode.Synchronous, e);
