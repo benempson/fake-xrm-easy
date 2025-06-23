@@ -218,67 +218,48 @@ namespace FakeXrmEasy.FakeMessageExecutors
                     else
                     {
                         bool isDup = false;
-                        bool checkAtts = false;
 
-                        if (entity.Id != Guid.Empty)
+                        StringBuilder entityAtts = new StringBuilder();
+                        List<KeyValuePair<string, object>> atts = entity.Attributes.OrderBy(kvp => kvp.Key).ToList();
+
+                        foreach (KeyValuePair<string, object> kvp in atts)
                         {
-                            foreach (var entity2 in checkEnts)
-                            {
-                                if (entity2.Id == Guid.Empty)
-                                    throw new Exception("entity2 has no Id! Can't compare...");
-
-                                if (entity.Id == entity2.Id)
-                                {
-                                    isDup = true;
-                                    break;
-                                }
-                            }
+                            if (kvp.Value.GetType() == typeof(AliasedValue))
+                                entityAtts.AppendLine($"{kvp.Key}: {((AliasedValue)kvp.Value).Value}");
+                            else if (kvp.Value.GetType() == typeof(Money))
+                                entityAtts.AppendLine($"{kvp.Key}: {((Money)kvp.Value).Value}");
+                            else if (kvp.Value.GetType() == typeof(OptionSetValue))
+                                entityAtts.AppendLine($"{kvp.Key}: {((OptionSetValue)kvp.Value).Value}");
+                            else if (kvp.Value.GetType() == typeof(EntityReference))
+                                entityAtts.AppendLine($"{kvp.Key}: {((EntityReference)kvp.Value).Id}");
+                            else
+                                entityAtts.AppendLine($"{kvp.Key}: {kvp.Value}");
                         }
 
-                        if (checkAtts)
+                        foreach (var entity2 in checkEnts)
                         {
-                            StringBuilder entityAtts = new StringBuilder();
-                            List<KeyValuePair<string, object>> atts = entity.Attributes.OrderBy(kvp => kvp.Key).ToList();
+                            StringBuilder entity2Atts = new StringBuilder();
+                            List<KeyValuePair<string, object>> atts2 = entity2.Attributes.OrderBy(kvp => kvp.Key).ToList();
 
-                            foreach (KeyValuePair<string, object> kvp in atts)
+                            foreach (KeyValuePair<string, object> kvp in atts2)
                             {
                                 if (kvp.Value.GetType() == typeof(AliasedValue))
-                                    entityAtts.AppendLine($"{kvp.Key}: {((AliasedValue)kvp.Value).Value}");
+                                    entity2Atts.AppendLine($"{kvp.Key}: {((AliasedValue)kvp.Value).Value}");
                                 else if (kvp.Value.GetType() == typeof(Money))
-                                    entityAtts.AppendLine($"{kvp.Key}: {((Money)kvp.Value).Value}");
+                                    entity2Atts.AppendLine($"{kvp.Key}: {((Money)kvp.Value).Value}");
                                 else if (kvp.Value.GetType() == typeof(OptionSetValue))
-                                    entityAtts.AppendLine($"{kvp.Key}: {((OptionSetValue)kvp.Value).Value}");
+                                    entity2Atts.AppendLine($"{kvp.Key}: {((OptionSetValue)kvp.Value).Value}");
                                 else if (kvp.Value.GetType() == typeof(EntityReference))
-                                    entityAtts.AppendLine($"{kvp.Key}: {((EntityReference)kvp.Value).Id}");
+                                    entity2Atts.AppendLine($"{kvp.Key}: {((EntityReference)kvp.Value).Id}");
                                 else
-                                    entityAtts.AppendLine($"{kvp.Key}: {kvp.Value}");
+                                    entity2Atts.AppendLine($"{kvp.Key}: {kvp.Value}");
                             }
 
-                            foreach (var entity2 in checkEnts)
+                            //BE 250602: If there is a match, then this is a dup entity and we shouldn't check any further
+                            if (entityAtts.ToString().Equals(entity2Atts.ToString()))
                             {
-                                StringBuilder entity2Atts = new StringBuilder();
-                                List<KeyValuePair<string, object>> atts2 = entity2.Attributes.OrderBy(kvp => kvp.Key).ToList();
-
-                                foreach (KeyValuePair<string, object> kvp in atts2)
-                                {
-                                    if (kvp.Value.GetType() == typeof(AliasedValue))
-                                        entity2Atts.AppendLine($"{kvp.Key}: {((AliasedValue)kvp.Value).Value}");
-                                    else if (kvp.Value.GetType() == typeof(Money))
-                                        entity2Atts.AppendLine($"{kvp.Key}: {((Money)kvp.Value).Value}");
-                                    else if (kvp.Value.GetType() == typeof(OptionSetValue))
-                                        entity2Atts.AppendLine($"{kvp.Key}: {((OptionSetValue)kvp.Value).Value}");
-                                    else if (kvp.Value.GetType() == typeof(EntityReference))
-                                        entity2Atts.AppendLine($"{kvp.Key}: {((EntityReference)kvp.Value).Id}");
-                                    else
-                                        entity2Atts.AppendLine($"{kvp.Key}: {kvp.Value}");
-                                }
-
-                                //BE 250602: If there is a match, then this is a dup entity and we shouldn't check any further
-                                if (entityAtts.ToString().Equals(entity2Atts.ToString()))
-                                {
-                                    isDup = true;
-                                    break;
-                                }
+                                isDup = true;
+                                break;
                             }
                         }
 
