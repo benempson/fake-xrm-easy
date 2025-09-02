@@ -19,7 +19,8 @@ namespace FakeXrmEasy.Extensions
         public static bool IsOptionSetValueCollection(this Type t)
         {
             var nullableType = Nullable.GetUnderlyingType(t);
-            return t == typeof(OptionSetValueCollection);
+            return t == typeof(OptionSetValueCollection) 
+                || t.Name.Equals("List`1"); //BE 250902: Added for detection of our custom MultiSelectOptionSet (List<int>) type;
         }
 #endif
 
