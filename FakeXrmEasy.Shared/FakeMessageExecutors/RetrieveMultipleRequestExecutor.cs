@@ -220,10 +220,13 @@ namespace FakeXrmEasy.FakeMessageExecutors
                         bool isDup = false;
 
                         StringBuilder entityAtts = new StringBuilder();
-                        //BE 260622: Include the primary key in the duplicate comparison. With ColumnSet(false) the projected rows carry no
-                        //attributes (only Id), so without this every distinct record serialises to the same empty string and Distinct wrongly
-                        //collapses them all into one. In D365 a Distinct query returns one row per distinct primary key, so keying on Id matches.
-                        entityAtts.AppendLine($"Id: {entity.Id}");
+                        //BE 260622: Mirror D365 DISTINCT semantics. DISTINCT dedups on the SELECTED columns, so rows that carry attributes are
+                        //compared on those attributes only (the primary key is NOT auto-added - see Issue328.DistinctBug, where two different
+                        //records with the same selected value collapse to one). But when a row has NO attributes (a ColumnSet(false) query),
+                        //the primary key is the only thing left to distinguish rows, so fall back to it - otherwise every distinct record would
+                        //collapse into one. This is what Account.GetIndirectAdvertisers_NoBookingsForXYears relies on.
+                        if (entity.Attributes.Count == 0)
+                            entityAtts.AppendLine($"Id: {entity.Id}");
                         List<KeyValuePair<string, object>> atts = entity.Attributes.OrderBy(kvp => kvp.Key).ToList();
 
                         foreach (KeyValuePair<string, object> kvp in atts)
@@ -243,7 +246,8 @@ namespace FakeXrmEasy.FakeMessageExecutors
                         foreach (var entity2 in checkEnts)
                         {
                             StringBuilder entity2Atts = new StringBuilder();
-                            entity2Atts.AppendLine($"Id: {entity2.Id}");
+                            if (entity2.Attributes.Count == 0)
+                                entity2Atts.AppendLine($"Id: {entity2.Id}");
                             List<KeyValuePair<string, object>> atts2 = entity2.Attributes.OrderBy(kvp => kvp.Key).ToList();
 
                             foreach (KeyValuePair<string, object> kvp in atts2)
