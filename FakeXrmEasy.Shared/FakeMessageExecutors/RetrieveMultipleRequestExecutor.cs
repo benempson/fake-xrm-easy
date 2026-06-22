@@ -220,6 +220,10 @@ namespace FakeXrmEasy.FakeMessageExecutors
                         bool isDup = false;
 
                         StringBuilder entityAtts = new StringBuilder();
+                        //BE 260622: Include the primary key in the duplicate comparison. With ColumnSet(false) the projected rows carry no
+                        //attributes (only Id), so without this every distinct record serialises to the same empty string and Distinct wrongly
+                        //collapses them all into one. In D365 a Distinct query returns one row per distinct primary key, so keying on Id matches.
+                        entityAtts.AppendLine($"Id: {entity.Id}");
                         List<KeyValuePair<string, object>> atts = entity.Attributes.OrderBy(kvp => kvp.Key).ToList();
 
                         foreach (KeyValuePair<string, object> kvp in atts)
@@ -239,6 +243,7 @@ namespace FakeXrmEasy.FakeMessageExecutors
                         foreach (var entity2 in checkEnts)
                         {
                             StringBuilder entity2Atts = new StringBuilder();
+                            entity2Atts.AppendLine($"Id: {entity2.Id}");
                             List<KeyValuePair<string, object>> atts2 = entity2.Attributes.OrderBy(kvp => kvp.Key).ToList();
 
                             foreach (KeyValuePair<string, object> kvp in atts2)
